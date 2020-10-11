@@ -1,0 +1,12 @@
+{
+  "name": "inventory-management-system",
+  "version": "1.0.0",
+  "description": "CLI application to manage inventory",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Shadab Sutar",
+  "license": "ISC"
+}
