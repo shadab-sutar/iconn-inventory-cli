@@ -27,6 +27,8 @@ validateUserInput = (values) => {
     if (firstChar_of_Passport === "B" || firstChar_of_Passport === "A") {
         passport = values[1].toUpperCase();
         validatePassportNumber(passport, firstChar_of_Passport);
+    } else {
+        firstChar_of_Passport = "";
     }
     let country = values[0].toUpperCase();
     let itemA = passport === "" ? values[1].toUpperCase() : values[2].toUpperCase();
@@ -143,7 +145,7 @@ calculatePrice = (payload) => {
                     let maskTotalPriceLocal, maskTotalPriceExport, completeUnits, partialUnits;
                     completeUnits = (Number(payload.masksQty) / 10).toString().split(".")[0];
                     partialUnits = (Number(payload.masksQty) / 10).toString().split(".")[1];
-                    if (partialUnits === "0") {
+                    if (partialUnits === "0" || partialUnits === undefined) {
                         maskTotalPriceLocal = Number(payload.masksQty) * Number(stockDetails[i].masks_Price);
                         maskTotalPriceExport = Number(payload.masksQty) * Number(stockDetails[i - 1].masks_Price) + (400 * completeUnits);
                         if (maskTotalPriceLocal < maskTotalPriceExport) {
@@ -175,7 +177,7 @@ calculatePrice = (payload) => {
                     let maskTotalPriceLocal, maskTotalPriceExport, completeUnits, partialUnits;
                     completeUnits = (Number(payload.glovesQty) / 10).toString().split(".")[0];
                     partialUnits = (Number(payload.glovesQty) / 10).toString().split(".")[1];
-                    if (partialUnits === "0") {
+                    if (partialUnits === "0" || partialUnits === undefined) {
                         maskTotalPriceLocal = Number(payload.glovesQty) * Number(stockDetails[i].gloves_Price);
                         maskTotalPriceExport = Number(payload.glovesQty) * Number(stockDetails[i - 1].gloves_Price) + (400 * completeUnits);
                         if (maskTotalPriceLocal < maskTotalPriceExport) {
@@ -214,7 +216,7 @@ calculatePrice = (payload) => {
                     let maskTotalPriceLocal, maskTotalPriceExport, completeUnits, partialUnits;
                     completeUnits = (Number(payload.masksQty) / 10).toString().split(".")[0];
                     partialUnits = (Number(payload.masksQty) / 10).toString().split(".")[1];
-                    if (partialUnits === "0") {
+                    if (partialUnits === "0" || partialUnits === undefined) {
                         maskTotalPriceLocal = Number(payload.masksQty) * Number(stockDetails[i].masks_Price);
                         maskTotalPriceExport = Number(payload.masksQty) * Number(stockDetails[i - 1].masks_Price) + (320 * completeUnits);
                         if (maskTotalPriceLocal < maskTotalPriceExport) {
@@ -246,7 +248,7 @@ calculatePrice = (payload) => {
                     let maskTotalPriceLocal, maskTotalPriceExport, completeUnits, partialUnits;
                     completeUnits = (Number(payload.glovesQty) / 10).toString().split(".")[0];
                     partialUnits = (Number(payload.glovesQty) / 10).toString().split(".")[1];
-                    if (partialUnits === "0") {
+                    if (partialUnits === "0" || partialUnits === undefined) {
                         maskTotalPriceLocal = Number(payload.glovesQty) * Number(stockDetails[i].gloves_Price);
                         maskTotalPriceExport = Number(payload.glovesQty) * Number(stockDetails[i - 1].gloves_Price) + (320 * completeUnits);
                         if (maskTotalPriceLocal < maskTotalPriceExport) {
@@ -278,6 +280,95 @@ calculatePrice = (payload) => {
         }
     }
 
+    if (payload.country === "UK" && payload.passportChar === "A") {
+        for (let i = 0; i < stockDetails.length; i++) {
+            if (payload.country === stockDetails[i].country.toUpperCase()) {
+                if (Number(payload.masksQty) <= Number(stockDetails[i].masks_Stock)) {
+                    let maskTotalPriceLocal, maskTotalPriceExport, completeUnits, partialUnits;
+                    completeUnits = (Number(payload.masksQty) / 10).toString().split(".")[0];
+                    partialUnits = (Number(payload.masksQty) / 10).toString().split(".")[1];
+                    if (partialUnits === "0" || partialUnits === undefined) {
+                        maskTotalPriceLocal = Number(payload.masksQty) * Number(stockDetails[i].masks_Price);
+                        maskTotalPriceExport = Number(payload.masksQty) * Number(stockDetails[i + 1].masks_Price) + (320 * completeUnits);
+                        if (maskTotalPriceLocal < maskTotalPriceExport) {
+                            maskTotalPrice = maskTotalPriceLocal;
+                            stockDetails[i].masks_Stock = Number(stockDetails[i].masks_Stock) - Number(payload.masksQty);
+                        } else {
+                            maskTotalPrice = Number(maskTotalPriceExport);
+                            stockDetails[i - 1].masks_Stock = Number(stockDetails[i - 1].masks_Stock) - Number(payload.masksQty);
+                        }
+                    } else {
+                        if (stockDetails[0].masks_Price < stockDetails[1].masks_Price) {
+                            maskTotalPriceExport = (Number(payload.masksQty) - Number(partialUnits)) * Number(stockDetails[i + 1].masks_Price) + (320 * Number(completeUnits));
+                            stockDetails[i + 1].masks_Stock = Number(stockDetails[i + 1].masks_Stock) - (Number(payload.masksQty) - Number(partialUnits));
+                            if (Number(partialUnits) <= 8) {
+                                maskTotalPriceLocal = Number(partialUnits) * Number(stockDetails[i].masks_Price);
+                                stockDetails[i].masks_Stock = Number(stockDetails[i].masks_Stock) - Number(partialUnits);
+                            } else {
+                                maskTotalPriceLocal = Number(partialUnits) * Number(stockDetails[i + 1].masks_Price) + 320;
+                                stockDetails[i + 1].masks_Stock = Number(stockDetails[i + 1].masks_Stock) - Number(partialUnits);
+                            }
+                            maskTotalPrice = Number(maskTotalPriceLocal) + Number(maskTotalPriceExport);
+                        } else {
+                            maskTotalPrice = Number(payload.masksQty) * Number(stockDetails[i].masks_Price);
+                            stockDetails[i].masks_Stock = Number(stockDetails[i].masks_Stock) - Number(payload.masksQty);
+                        }
+                    }
+                } else {
+                    let localmaskPrice, exportmaskPrice, balanceQty, remainingUnits;
+                    remainingUnits = Math.ceil(balanceQty / 10);
+                    balanceQty = Number(payload.masksQty) - Number(stockDetails[i].masks_Stock);
+                    localmaskPrice = Number(stockDetails[i].masks_Stock) * Number(stockDetails[i].masks_Price);
+                    exportmaskPrice = Number(stockDetails[i + 1].masks_Price) * balanceQty + (320 * remainingUnits);
+                    maskTotalPrice = Number(localmaskPrice) + Number(exportmaskPrice);
+                    stockDetails[i].masks_Stock = Number("0");
+                    stockDetails[i + 1].masks_Stock = Number(stockDetails[i + 1].masks_Stock) - Number(balanceQty);
+                }
+                if (Number(payload.glovesQty) <= Number(stockDetails[i].gloves_Stock)) {
+                    let maskTotalPriceLocal, maskTotalPriceExport, completeUnits, partialUnits;
+                    completeUnits = (Number(payload.glovesQty) / 10).toString().split(".")[0];
+                    partialUnits = (Number(payload.glovesQty) / 10).toString().split(".")[1];
+                    if (partialUnits === "0") {
+                        maskTotalPriceLocal = Number(payload.glovesQty) * Number(stockDetails[i].gloves_Price);
+                        maskTotalPriceExport = Number(payload.glovesQty) * Number(stockDetails[i + 1].gloves_Price) + (320 * completeUnits);
+                        if (maskTotalPriceLocal < maskTotalPriceExport) {
+                            glovesTotalPrice = Number(maskTotalPriceLocal);
+                            stockDetails[i].gloves_Stock = Number(stockDetails[i].gloves_Stock) - Number(payload.glovesQty);
+                        } else {
+                            glovesTotalPrice = Number(maskTotalPriceExport);
+                            stockDetails[i + 1].gloves_Stock = Number(stockDetails[i + 1].gloves_Stock) - Number(payload.glovesQty);
+                        }
+                    } else {
+                        if (stockDetails[0].gloves_Price < stockDetails[1].gloves_Price) {
+                            maskTotalPriceExport = (Number(payload.glovesQty) - Number(partialUnits)) * Number(stockDetails[i + 1].gloves_Price) + (320 * Number(completeUnits));
+                            stockDetails[i + 1].gloves_Stock = Number(stockDetails[i + 1].gloves_Stock) - (Number(payload.glovesQty) - Number(partialUnits));
+                            if (Number(partialUnits) <= 8) {
+                                maskTotalPriceLocal = Number(partialUnits) * Number(stockDetails[i].gloves_Price);
+                                stockDetails[i].gloves_Stock = Number(stockDetails[i].gloves_Stock) - Number(partialUnits);
+                            } else {
+                                maskTotalPriceLocal = Number(partialUnits) * Number(stockDetails[i + 1].gloves_Price) + 320;
+                                stockDetails[i + 1].gloves_Stock = Number(stockDetails[i + 1].gloves_Stock) - Number(partialUnits);
+                            }
+                            glovesTotalPrice = Number(maskTotalPriceLocal) + Number(maskTotalPriceExport);
+                        } else {
+                            glovesTotalPrice = Number(payload.glovesQty) * Number(stockDetails[i].gloves_Price);
+                            stockDetails[i].gloves_Stock = Number(stockDetails[i].gloves_Stock) - Number(payload.glovesQty);
+                        }
+                    }
+                } else {
+                    let localmaskPrice, exportmaskPrice, balanceQty, remainingUnits;
+                    remainingUnits = Math.ceil(balanceQty / 10);
+                    balanceQty = Number(payload.glovesQty) - Number(stockDetails[i].gloves_Stock);
+                    localmaskPrice = Number(stockDetails[i].gloves_Stock) * Number(stockDetails[i].gloves_Price);
+                    exportmaskPrice = Number(stockDetails[i + 1].gloves_Price) * balanceQty + (320 * remainingUnits);
+                    glovesTotalPrice = Number(localmaskPrice) + Number(exportmaskPrice);
+                    stockDetails[i].gloves_Stock = Number("0");
+                    stockDetails[i + 1].gloves_Stock = Number(stockDetails[i + 1].gloves_Stock) - Number(balanceQty);
+                }
+            }
+        }
+    }
+
     totalPrice = maskTotalPrice + glovesTotalPrice;
     console.log(totalPrice + ":" + stockDetails[0].masks_Stock + ":" + stockDetails[1].masks_Stock + " " + stockDetails[0].gloves_Stock + ":" + stockDetails[1].gloves_Stock);
 
@@ -289,39 +380,43 @@ validatePassportNumber = (passport, passportCharacter) => {
         showError("Invalid Passport!");
         return;
     }
-    if (passportCharacter === "B" && passport.length !== 13) {
-        showError("Passport number invalid!");
-        return;
-    } else {
-        if (isNaN(passport.substr(1, 3))) {
+    if (passportCharacter === "B") {
+        if (passport.length !== 13) {
             showError("Passport number invalid!");
             return;
+        } else {
+            if (isNaN(passport.substr(1, 3))) {
+                showError("Passport number invalid!");
+                return;
+            }
+            if (!isNaN(passport.substr(4, 2))) {
+                showError("Passport number invalid!");
+                return;
+            }
+            let format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
+            if (format.test(passport.substr(6, 12))) {
+                showError("Passport number invalid!");
+                return;
+            }
         }
-        if (!isNaN(passport.substr(4, 2))) {
+    }
+    if (passportCharacter === "A") {
+        if (passport.length !== 12) {
             showError("Passport number invalid!");
             return;
-        }
-        let format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
-        if (format.test(passport.substr(6, 12))) {
-            showError("Passport number invalid!");
-            return;
+        } else {
+            if (!isNaN(passport.substr(1, 2))) {
+                showError("Passport number invalid!");
+                return;
+            }
+            let format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
+            if (format.test(passport.substr(3, 9))) {
+                showError("Passport number invalid!");
+                return;
+            }
         }
     }
 
-    if (passportCharacter === "A" && passport.length !== 12) {
-        showError("Passport number invalid!");
-        return;
-    } else {
-        if (!isNaN(passport.substr(1, 2))) {
-            showError("Passport number invalid!");
-            return;
-        }
-        let format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
-        if (format.test(passport.substr(3, 9))) {
-            showError("Passport number invalid!");
-            return;
-        }
-    }
 }
 
 //export modules for accessibility
