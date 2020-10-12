@@ -81,7 +81,7 @@ validateUserInput = (values) => {
     let totalMasks = Number(stockDetails[0].masks_Stock) + Number(stockDetails[1].masks_Stock);
     let totalGloves = Number(stockDetails[0].gloves_Stock) + Number(stockDetails[1].gloves_Stock);
     if (masks > totalMasks || gloves > totalGloves) {
-        showError("Out of Stock. Order cannot be fulfilled!");
+        console.log("Out of Stock" + ":" + stockDetails[0].masks_Stock + ":" + stockDetails[1].masks_Stock + " " + stockDetails[0].gloves_Stock + ":" + stockDetails[1].gloves_Stock);
         return;
     }
 
@@ -140,9 +140,68 @@ calculatePrice = (payload) => {
         for (let i = 0; i < stockDetails.length; i++) {
             if (payload.country === stockDetails[i].country.toUpperCase()) {
                 if (Number(payload.masksQty) <= Number(stockDetails[i].masks_Stock)) {
-                    //logic to fulfil from UK
-                    maskTotalPrice = Number(payload.masksQty) * Number(stockDetails[i].masks_Price);
-                    stockDetails[i].masks_Stock = stockDetails[i].masks_Stock - payload.masksQty;
+                    let maskTotalPriceLocal, maskTotalPriceExport, completeUnits, partialUnits;
+                    completeUnits = (Number(payload.masksQty) / 10).toString().split(".")[0];
+                    partialUnits = (Number(payload.masksQty) / 10).toString().split(".")[1];
+                    if (partialUnits === "0") {
+                        maskTotalPriceLocal = Number(payload.masksQty) * Number(stockDetails[i].masks_Price);
+                        maskTotalPriceExport = Number(payload.masksQty) * Number(stockDetails[i - 1].masks_Price) + (400 * completeUnits);
+                        if (maskTotalPriceLocal < maskTotalPriceExport) {
+                            maskTotalPrice = maskTotalPriceLocal;
+                            stockDetails[i].masks_Stock = Number(stockDetails[i].masks_Stock) - Number(payload.masksQty);
+                        } else {
+                            maskTotalPrice = Number(maskTotalPriceExport);
+                            stockDetails[i - 1].masks_Stock = Number(stockDetails[i - 1].masks_Stock) - Number(payload.masksQty);
+                        }
+                    } else {
+                        if (stockDetails[0].masks_Price < stockDetails[1].masks_Price) {
+                            maskTotalPriceExport = (Number(payload.masksQty) - Number(partialUnits)) * Number(stockDetails[i - 1].masks_Price) + (400 * Number(completeUnits));
+                            stockDetails[i - 1].masks_Stock = Number(stockDetails[i - 1].masks_Stock) - (Number(payload.masksQty) - Number(partialUnits));
+                            if (Number(partialUnits) <= 8) {
+                                maskTotalPriceLocal = Number(partialUnits) * Number(stockDetails[i].masks_Price);
+                                stockDetails[i].masks_Stock = Number(stockDetails[i].masks_Stock) - Number(partialUnits);
+                            } else {
+                                maskTotalPriceLocal = Number(partialUnits) * Number(stockDetails[i - 1].masks_Price) + 400;
+                                stockDetails[i - 1].masks_Stock = Number(stockDetails[i - 1].masks_Stock) - Number(partialUnits);
+                            }
+                            maskTotalPrice = Number(maskTotalPriceLocal) + Number(maskTotalPriceExport);
+                        } else {
+                            maskTotalPrice = Number(payload.masksQty) * Number(stockDetails[i].masks_Price);
+                            stockDetails[i].masks_Stock = Number(stockDetails[i].masks_Stock) - Number(payload.masksQty);
+                        }
+                    }
+                }
+                if (Number(payload.glovesQty) <= Number(stockDetails[i].gloves_Stock)) {
+                    let maskTotalPriceLocal, maskTotalPriceExport, completeUnits, partialUnits;
+                    completeUnits = (Number(payload.glovesQty) / 10).toString().split(".")[0];
+                    partialUnits = (Number(payload.glovesQty) / 10).toString().split(".")[1];
+                    if (partialUnits === "0") {
+                        maskTotalPriceLocal = Number(payload.glovesQty) * Number(stockDetails[i].gloves_Price);
+                        maskTotalPriceExport = Number(payload.glovesQty) * Number(stockDetails[i - 1].gloves_Price) + (400 * completeUnits);
+                        if (maskTotalPriceLocal < maskTotalPriceExport) {
+                            glovesTotalPrice = Number(maskTotalPriceLocal);
+                            stockDetails[i].gloves_Stock = Number(stockDetails[i].gloves_Stock) - Number(payload.glovesQty);
+                        } else {
+                            glovesTotalPrice = Number(maskTotalPriceExport);
+                            stockDetails[i - 1].gloves_Stock = Number(stockDetails[i - 1].gloves_Stock) - Number(payload.glovesQty);
+                        }
+                    } else {
+                        if (stockDetails[0].gloves_Price < stockDetails[1].gloves_Price) {
+                            maskTotalPriceExport = (Number(payload.glovesQty) - Number(partialUnits)) * Number(stockDetails[i - 1].gloves_Price) + (400 * Number(completeUnits));
+                            stockDetails[i - 1].gloves_Stock = Number(stockDetails[i - 1].gloves_Stock) - (Number(payload.glovesQty) - Number(partialUnits));
+                            if (Number(partialUnits) <= 8) {
+                                maskTotalPriceLocal = Number(partialUnits) * Number(stockDetails[i].gloves_Price);
+                                stockDetails[i].gloves_Stock = Number(stockDetails[i].gloves_Stock) - Number(partialUnits);
+                            } else {
+                                maskTotalPriceLocal = Number(partialUnits) * Number(stockDetails[i - 1].gloves_Price) + 400;
+                                stockDetails[i - 1].gloves_Stock = Number(stockDetails[i - 1].gloves_Stock) - Number(partialUnits);
+                            }
+                            glovesTotalPrice = Number(maskTotalPriceLocal) + Number(maskTotalPriceExport);
+                        } else {
+                            glovesTotalPrice = Number(payload.glovesQty) * Number(stockDetails[i].gloves_Price);
+                            stockDetails[i].gloves_Stock = Number(stockDetails[i].gloves_Stock) - Number(payload.glovesQty);
+                        }
+                    }
                 }
             }
         }
