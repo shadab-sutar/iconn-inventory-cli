@@ -26,7 +26,7 @@ validateUserInput = (values) => {
     let firstChar_of_Passport = values[1].substr(0, 1).toUpperCase();
     if (firstChar_of_Passport === "B" || firstChar_of_Passport === "A") {
         passport = values[1].toUpperCase();
-        // validatePassportNumber(passport, firstChar_of_Passport);
+        validatePassportNumber(passport, firstChar_of_Passport);
     }
     let country = values[0].toUpperCase();
     let itemA = passport === "" ? values[1].toUpperCase() : values[2].toUpperCase();
@@ -78,8 +78,8 @@ validateUserInput = (values) => {
     }
 
     //check stock availability
-    let totalMasks = stockDetails[0].masks_Stock + stockDetails[1].masks_Stock;
-    let totalGloves = stockDetails[0].gloves_Stock + stockDetails[1].gloves_Stock;
+    let totalMasks = Number(stockDetails[0].masks_Stock) + Number(stockDetails[1].masks_Stock);
+    let totalGloves = Number(stockDetails[0].gloves_Stock) + Number(stockDetails[1].gloves_Stock);
     if (masks > totalMasks || gloves > totalGloves) {
         showError("Out of Stock. Order cannot be fulfilled!");
         return;
@@ -155,8 +155,42 @@ calculatePrice = (payload) => {
 
 //check if user passport number is valid
 validatePassportNumber = (passport, passportCharacter) => {
-    if (passportCharacter === "B" && passport.length === 13) {
+    if (passportCharacter !== "B" && passportCharacter !== "A") {
+        showError("Invalid Passport!");
+        return;
+    }
+    if (passportCharacter === "B" && passport.length !== 13) {
+        showError("Passport number invalid!");
+        return;
+    } else {
+        if (isNaN(passport.substr(1, 3))) {
+            showError("Passport number invalid!");
+            return;
+        }
+        if (!isNaN(passport.substr(4, 2))) {
+            showError("Passport number invalid!");
+            return;
+        }
+        let format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
+        if (format.test(passport.substr(6, 12))) {
+            showError("Passport number invalid!");
+            return;
+        }
+    }
 
+    if (passportCharacter === "A" && passport.length !== 12) {
+        showError("Passport number invalid!");
+        return;
+    } else {
+        if (!isNaN(passport.substr(1, 2))) {
+            showError("Passport number invalid!");
+            return;
+        }
+        let format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
+        if (format.test(passport.substr(3, 9))) {
+            showError("Passport number invalid!");
+            return;
+        }
     }
 }
 
