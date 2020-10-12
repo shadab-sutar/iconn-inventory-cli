@@ -70,14 +70,20 @@ validateUserInput = (values) => {
     }
 
     //check if input item type is available in inventory
-    // let isItemA = stockDetails.some(stock => (stock.itemA.toUpperCase() === itemA || stock.itemB.toUpperCase() === itemA));
-    // let isItemB = stockDetails.some(stock => (stock.itemA.toUpperCase() === itemB || stock.itemB.toUpperCase() === itemB));
-    // if (!isItemA || !isItemB) {
-    //     showError("The item you are looking for is currently not available in stock");
-    //     return;
-    // }
+    let isItemA = stockDetails.some(stock => (stock.itemA_Desc.toUpperCase() === itemA || stock.itemB_Desc.toUpperCase() === itemA));
+    let isItemB = stockDetails.some(stock => (stock.itemA_Desc.toUpperCase() === itemB || stock.itemB_Desc.toUpperCase() === itemB));
+    if (!isItemA || !isItemB) {
+        showError("The item you are looking for is currently not available in stock");
+        return;
+    }
 
     //check stock availability
+    let totalMasks = stockDetails[0].masks_Stock + stockDetails[1].masks_Stock;
+    let totalGloves = stockDetails[0].gloves_Stock + stockDetails[1].gloves_Stock;
+    if (masks > totalMasks || gloves > totalGloves) {
+        showError("Out of Stock. Order cannot be fulfilled!");
+        return;
+    }
 
     //create single object to pass argument for calculation
     let processingObj = {
@@ -98,7 +104,7 @@ calculatePrice = (payload) => {
         for (let i = 0; i < stockDetails.length; i++) {
             if (payload.country === stockDetails[i].country.toUpperCase()) {
                 if (Number(payload.masksQty) <= Number(stockDetails[i].masks_Stock)) {
-                    //some logic to fulfil from UK
+                    //logic to fulfil from UK
                     maskTotalPrice = Number(payload.masksQty) * Number(stockDetails[i].masks_Price);
                     stockDetails[i].masks_Stock = stockDetails[i].masks_Stock - payload.masksQty;
                 } else {
@@ -112,7 +118,7 @@ calculatePrice = (payload) => {
                     stockDetails[i + 1].masks_Stock = stockDetails[i + 1].masks_Stock - remainingStock;
                 }
                 if (Number(payload.glovesQty) <= Number(stockDetails[i].gloves_Stock)) {
-                    //some logic to fulfil from UK
+                    //logic to fulfil from UK
                     glovesTotalPrice = Number(payload.glovesQty) * Number(stockDetails[i].gloves_Price);
                     stockDetails[i].gloves_Stock = stockDetails[i].gloves_Stock - payload.glovesQty;
                 } else {
@@ -129,6 +135,19 @@ calculatePrice = (payload) => {
             break;
         }
     }
+
+    if (payload.country === "GERMANY" && (payload.passportChar === "A" || payload.passportChar === "")) {
+        for (let i = 0; i < stockDetails.length; i++) {
+            if (payload.country === stockDetails[i].country.toUpperCase()) {
+                if (Number(payload.masksQty) <= Number(stockDetails[i].masks_Stock)) {
+                    //logic to fulfil from UK
+                    maskTotalPrice = Number(payload.masksQty) * Number(stockDetails[i].masks_Price);
+                    stockDetails[i].masks_Stock = stockDetails[i].masks_Stock - payload.masksQty;
+                }
+            }
+        }
+    }
+
     totalPrice = maskTotalPrice + glovesTotalPrice;
     console.log(totalPrice + ":" + stockDetails[0].masks_Stock + ":" + stockDetails[1].masks_Stock + " " + stockDetails[0].gloves_Stock + ":" + stockDetails[1].gloves_Stock);
 
